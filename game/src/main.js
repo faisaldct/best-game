@@ -24,6 +24,11 @@ const shot = params.get('shot');
 const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
 const seed = Number.isInteger(seedParam) ? seedParam : Math.floor(Math.random() * 4294967296);
 
+// A page error is recorded for the screenshot runner to see.
+window.addEventListener('error', (event) => {
+  window.__shotError = String(event.message || event.error || 'page error');
+});
+
 const canvas = document.getElementById('game');
 const status = document.getElementById('status');
 const world = createWorld(createRandom(seed));

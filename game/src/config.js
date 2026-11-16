@@ -18,8 +18,8 @@ export const PLAYER = {
   maxFuel: 100,
   fuelDrain: 1.2,
   /** Light radius at full fuel and at empty fuel. */
-  glowFull: 300,
-  glowEmpty: 110,
+  glowFull: 330,
+  glowEmpty: 120,
   /** Bolts per second while firing. */
   fireRate: 7,
   boltSpeed: 660,

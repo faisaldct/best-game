@@ -40,6 +40,23 @@ const MIME = {
 
 createServer((request, response) => {
   const url = new URL(request.url ?? '/', 'http://localhost');
+  // Local Network Access (Chrome 157+): a page served from a public context
+  // that reaches this loopback server must pass a preflight. Answer it and
+  // mark every response as private-network friendly.
+  const lnaHeaders = {
+    'access-control-allow-private-network': 'true',
+    'access-control-allow-origin': '*',
+  };
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204, {
+      ...lnaHeaders,
+      'access-control-allow-methods': 'GET, OPTIONS',
+      'access-control-allow-headers': '*',
+      'access-control-max-age': '86400',
+    });
+    response.end();
+    return;
+  }
   let pathname;
   try {
     pathname = decodeURIComponent(url.pathname);
@@ -63,11 +80,12 @@ createServer((request, response) => {
     return;
   }
   response.writeHead(200, {
+    ...lnaHeaders,
     'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
     'content-length': size,
     'cache-control': 'no-store',
   });
   createReadStream(file).pipe(response);
-}).listen(port, '127.0.0.1', () => {
+}).listen(port, '0.0.0.0', () => {
   console.log(`game/ is on http://localhost:${port}`);
 });

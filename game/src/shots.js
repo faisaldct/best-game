@@ -118,6 +118,9 @@ export function autopilot(state) {
       if (closing > 60) add(-dy / d, dx / d, 1.2);
     }
   }
+  // A steady pull toward the middle of the arena, so the fight stays in frame
+  // instead of drifting into a corner.
+  toward(FIELD.width / 2, FIELD.height / 2, 0.35);
   // Keep off the walls.
   if (player.x < 70) add(1, 0, 1);
   if (player.x > FIELD.width - 70) add(-1, 0, 1);

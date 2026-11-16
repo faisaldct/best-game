@@ -275,7 +275,7 @@ export function createRenderer(canvas) {
     const player = state.player;
     dctx.clearRect(0, 0, FIELD.width, FIELD.height);
     dctx.globalCompositeOperation = 'source-over';
-    dctx.fillStyle = 'rgba(4, 3, 10, 0.88)';
+    dctx.fillStyle = 'rgba(4, 3, 10, 0.78)';
     dctx.fillRect(0, 0, FIELD.width, FIELD.height);
     if (player) {
       const fuelRatio = player.fuel / player.maxFuel;
@@ -302,6 +302,86 @@ export function createRenderer(canvas) {
       ctx.restore();
     }
     ctx.drawImage(darkness, 0, 0);
+  }
+
+  /**
+   * Light that shines through the dark: the shadows' eyes, the embers, the
+   * bolts and the orbs are drawn again over the darkness, so the player can
+   * always read what is coming, and the frame never looks empty.
+   */
+  function drawGlowThrough(state, time) {
+    // Enemy eyes, bright enough to read through the dark.
+    for (let i = 0; i < state.enemies.length; i += 1) {
+      const enemy = state.enemies[i];
+      if (enemy.kind === KIND_BOSS) {
+        ctx.fillStyle = '#ff2e4d';
+        for (let k = -2; k <= 2; k += 1) {
+          ctx.beginPath();
+          ctx.arc(enemy.x + k * 13, enemy.y - 8, 3.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#ffd7de';
+        ctx.beginPath();
+        ctx.arc(enemy.x - 13, enemy.y + 12, 3, 0, Math.PI * 2);
+        ctx.arc(enemy.x + 13, enemy.y + 12, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (enemy.kind === KIND_WRAITH) {
+        ctx.fillStyle = '#efe9ff';
+        ctx.beginPath();
+        ctx.arc(enemy.x - 4.5, enemy.y - 6, 2.6, 0, Math.PI * 2);
+        ctx.arc(enemy.x + 4.5, enemy.y - 6, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (enemy.kind === KIND_SPITTER) {
+        ctx.fillStyle = '#c8ffce';
+        ctx.beginPath();
+        ctx.arc(enemy.x - 5, enemy.y - 5, 2.4, 0, Math.PI * 2);
+        ctx.arc(enemy.x + 5, enemy.y - 5, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#d9c8ff';
+        ctx.beginPath();
+        ctx.arc(enemy.x - 5, enemy.y - 3, 2.5, 0, Math.PI * 2);
+        ctx.arc(enemy.x + 5, enemy.y - 3, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // Ember glows.
+    for (let i = 0; i < state.pickups.length; i += 1) {
+      const p = state.pickups[i];
+      if (p.kind !== 'ember') continue;
+      const flicker = 0.7 + Math.sin(time * 9 + p.x) * 0.3;
+      ctx.save();
+      ctx.globalAlpha = flicker;
+      ctx.fillStyle = PALETTE.ember;
+      ctx.shadowColor = PALETTE.emberHot;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y + Math.sin(p.t * 4) * 3, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Bolts and orbs shine through as well.
+    for (let i = 0; i < state.bolts.length; i += 1) {
+      const bolt = state.bolts[i];
+      ctx.save();
+      ctx.strokeStyle = PALETTE.bolt;
+      ctx.shadowColor = PALETTE.bolt;
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(bolt.x - bolt.vx * 0.02, bolt.y - bolt.vy * 0.02);
+      ctx.lineTo(bolt.x, bolt.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+    for (let i = 0; i < state.orbs.length; i += 1) {
+      const orb = state.orbs[i];
+      ctx.strokeStyle = '#b9a7ff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   function drawHud(state, best, muted) {
@@ -572,6 +652,7 @@ export function createRenderer(canvas) {
         drawPlayer(state, aim, time);
         drawParticles(particles);
         drawDarkness(state);
+        drawGlowThrough(state, time);
         if (state.flash > 0) {
           ctx.fillStyle = `rgba(255, 40, 60, ${state.flash * 0.25})`;
           ctx.fillRect(0, 0, FIELD.width, FIELD.height);
@@ -580,6 +661,7 @@ export function createRenderer(canvas) {
         for (let i = 0; i < state.enemies.length; i += 1) drawShadow(ctx, state.enemies[i], time);
         drawParticles(particles);
         drawDarkness(state);
+        drawGlowThrough(state, time);
       }
       if (screen === SCREEN_PLAY || screen === SCREEN_PAUSED) drawHud(state, best, muted);
       if (screen === SCREEN_TITLE) drawTitle(state, best, time);
