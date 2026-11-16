@@ -44,7 +44,7 @@ function edgePoint(random, player) {
   return { x: 60, y: 60 };
 }
 
-function makeEnemy(kind, x, y, wave) {
+function makeEnemy(kind, x, y, wave, random) {
   const spec = ENEMY[kind];
   const speedScale = 1 + Math.min(0.35, (wave - 1) * 0.03);
   return {
@@ -59,10 +59,10 @@ function makeEnemy(kind, x, y, wave) {
     speed: spec.speed * speedScale,
     score: spec.score,
     t: 0,
-    shootCd: 1.5 + Math.random() * 1.5,
+    shootCd: 1.5 + random.next() * 1.5,
     burstCd: 3,
     summonCd: 6,
-    phase: Math.random() * Math.PI * 2,
+    phase: random.next() * Math.PI * 2,
   };
 }
 
@@ -297,7 +297,7 @@ export function createWorld(random) {
         enemy.summonCd = 8;
         for (let i = 0; i < 3; i += 1) {
           const at = edgePoint(random, player);
-          state.enemies.push(makeEnemy(KIND_CRAWLER, at.x, at.y, state.wave));
+          state.enemies.push(makeEnemy(KIND_CRAWLER, at.x, at.y, state.wave, random));
         }
         state.fx.push({ type: 'summon', x: enemy.x, y: enemy.y });
       }
@@ -354,7 +354,7 @@ export function createWorld(random) {
           for (let n = 0; n < batch && state.spawnQueue.length > 0; n += 1) {
             const kind = state.spawnQueue.shift();
             const at = edgePoint(random, player);
-            const enemy = makeEnemy(kind, at.x, at.y, state.wave);
+            const enemy = makeEnemy(kind, at.x, at.y, state.wave, random);
             state.enemies.push(enemy);
             if (kind === KIND_BOSS) {
               state.boss = enemy;
@@ -495,7 +495,7 @@ export function createWorld(random) {
     state.time += dt;
     if (state.enemies.length < 6 && random.next() < dt * 0.5) {
       const kind = random.pick([KIND_CRAWLER, KIND_WRAITH]);
-      state.enemies.push(makeEnemy(kind, random.range(60, FIELD.width - 60), random.range(60, FIELD.height - 60), 1));
+      state.enemies.push(makeEnemy(kind, random.range(60, FIELD.width - 60), random.range(60, FIELD.height - 60), 1, random));
     }
     for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
       const enemy = state.enemies[i];

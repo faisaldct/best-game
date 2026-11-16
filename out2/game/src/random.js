@@ -1,0 +1,28 @@
+// A small seeded generator (mulberry32), so a screenshot seed always plays the same
+// game. The game uses Math.random nowhere in its simulation.
+
+export function createRandom(seed) {
+  let state = (seed >>> 0) || 0x9e3779b9;
+  function next() {
+    state = (state + 0x6d2b79f5) | 0;
+    let value = Math.imul(state ^ (state >>> 15), 1 | state);
+    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  }
+  return {
+    /** A float in [0, 1). */
+    next,
+    /** A float in [min, max). */
+    range(min, max) {
+      return min + (max - min) * next();
+    },
+    /** An integer in [min, max]. */
+    int(min, max) {
+      return Math.floor(min + (max - min + 1) * next());
+    },
+    /** One element of an array. */
+    pick(list) {
+      return list[Math.floor(next() * list.length)];
+    },
+  };
+}

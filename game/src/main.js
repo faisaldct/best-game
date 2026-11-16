@@ -78,6 +78,26 @@ function runGame() {
   let last = performance.now();
   let prevMouseDown = false;
 
+  // A read-only handle for automated checks (play-tests, screenshots): the
+  // current screen and the numbers that matter. It changes nothing in play.
+  window.__emberward = {
+    state() {
+      const s = world.state;
+      return {
+        screen,
+        score: s.score,
+        wave: s.wave,
+        kills: s.kills,
+        hp: s.player.hp,
+        fuel: Math.round(s.player.fuel * 10) / 10,
+        enemies: s.enemies.length,
+        shotsFired: s.shotsFired,
+        shotsHit: s.shotsHit,
+        status: status.textContent,
+      };
+    },
+  };
+
   function announce(text) {
     status.textContent = text;
   }
@@ -189,6 +209,8 @@ function runGame() {
       if (input.consume(ACTION_PAUSE)) {
         screen = SCREEN_PAUSED;
         announce('Paused.');
+      } else if (input.consume(ACTION_RESTART)) {
+        startRun();
       }
     } else if (screen === SCREEN_PAUSED) {
       if (input.consume(ACTION_PAUSE) || clicked) {
